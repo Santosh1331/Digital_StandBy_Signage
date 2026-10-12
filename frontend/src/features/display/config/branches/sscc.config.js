@@ -1,4 +1,5 @@
 import kssccLogo from '../../../../common/assets/ksscc-logo.png';
+import welcomeSscc from '../../../../common/assets/welcome-sscc.png';
 import api from '../../../../common/services/api';
 
 const formatSlug = (val) => {
@@ -13,15 +14,15 @@ const buildPagesFromPlaylist = (fetchedPlaylist, locLabel) => {
       if (step.departments && step.departments.length > 0) {
         step.departments.forEach(dept => {
           const doctors = dept.doctors || [];
-          for (let i = 0; i < doctors.length; i += 3) {
+          doctors.forEach(doc => {
             pages.push({
               stepTitle: step.title,
-              duration: step.duration || 10,
+              duration: 3,
               department: dept.name,
-              doctors: doctors.slice(i, i + 3),
+              doctors: [doc],
               locLabel,
             });
-          }
+          });
         });
       }
     });
@@ -32,12 +33,14 @@ const buildPagesFromPlaylist = (fetchedPlaylist, locLabel) => {
 export const ssccConfig = {
   id: 'sscc',
   displayName: 'KIMS Super Speciality Cancer Centre',
+  welcomeImage: welcomeSscc,
 
   theme: {
     accentColor: '#fbbd61',
     bgPrimary: '#004d40',
     textPrimary: '#ffffff',
     logo: kssccLogo,
+    welcomeImage: welcomeSscc,
     footerNumbers: [
       { label: 'AMBULANCE', number: '0674-7111333 / 7440 070010' },
       { label: 'HELLO KIMS', number: '0674 2304400 / 7111000' },
@@ -80,15 +83,15 @@ export const ssccConfig = {
     const combinedPages = [];
     Object.keys(combinedDepts).sort().forEach(deptName => {
       const doctors = combinedDepts[deptName];
-      for (let i = 0; i < doctors.length; i += 3) {
+      doctors.forEach(doc => {
         combinedPages.push({
           stepTitle: 'OPD SCHEDULED',
-          duration: 10,
+          duration: 3,
           department: deptName,
-          doctors: doctors.slice(i, i + 3),
+          doctors: [doc],
           locLabel: 'combined',
         });
-      }
+      });
     });
 
     // Phase 2: Build location-specific pages

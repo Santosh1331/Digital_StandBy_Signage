@@ -1,5 +1,6 @@
 import kimsLogo from '../../../../common/assets/kims-logo.png';
 import kiitLogo from '../../../../common/assets/kiit-logo.png';
+import welcomePbmh from '../../../../common/assets/welcome-pbmh.png';
 import api from '../../../../common/services/api';
 
 const formatSlug = (val) => {
@@ -14,15 +15,15 @@ const buildPages = (fetchedPlaylist, locLabel) => {
       if (step.departments && step.departments.length > 0) {
         step.departments.forEach(dept => {
           const doctors = dept.doctors || [];
-          for (let i = 0; i < doctors.length; i += 3) {
+          doctors.forEach(doc => {
             pages.push({
               stepTitle: step.title,
-              duration: step.duration || 10,
+              duration: 3,
               department: dept.name,
-              doctors: doctors.slice(i, i + 3),
+              doctors: [doc],
               locLabel,
             });
-          }
+          });
         });
       }
     });
@@ -32,13 +33,15 @@ const buildPages = (fetchedPlaylist, locLabel) => {
 
 export const kimsConfig = {
   id: 'kims',
-  displayName: 'KIMS Hospital',
+  displayName: 'Pradyumna Bal Memorial Hospital',
+  welcomeImage: welcomePbmh,
 
   theme: {
     accentColor: '#fbbd61',
     bgPrimary: '#004d40',
     textPrimary: '#ffffff',
     logo: kimsLogo,
+    welcomeImage: welcomePbmh,
     footerNumbers: [
       { label: 'AMBULANCE', number: '0674-7111333 / 7440 070010' },
       { label: 'HELLO KIMS', number: '0674 2304400 / 7111000' },

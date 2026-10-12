@@ -18,13 +18,19 @@ import { kidsConfig } from './branches/kids.config.js';
  *   - theme:       { accentColor, bgPrimary, textPrimary, logo, footerNumbers[] }
  *   - buildPages:  async (branch, location) => { pages, playlist }
  */
+export const pbmhConfig = {
+  ...kimsConfig,
+  id: 'pbmh',
+  displayName: 'Pradyumna Bal Memorial Hospital',
+};
+
 const REGISTRY = {
   // SSCC — Super Speciality Cancer Centre (dual-location KSS/KCC logic)
   sscc: ssccConfig,
 
   // KIMS — main hospital (default)
   kims: kimsConfig,
-  pbmh: kimsConfig, // PBMH uses the same simple logic as KIMS
+  pbmh: pbmhConfig, // PBMH - Pradyumna Bal Memorial Hospital
 
   // KIDS / Dental — same playlist logic as KIMS, different logo
   kids: kidsConfig,

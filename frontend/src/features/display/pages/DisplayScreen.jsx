@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MonitorPlay } from 'lucide-react';
@@ -7,10 +7,13 @@ import { getBranchConfig } from '../config/branchRegistry';
 import { useDisplayPlaylist } from '../hooks/useDisplayPlaylist';
 import DisplayHeader from '../components/DisplayHeader';
 import DisplayFooter from '../components/DisplayFooter';
-import DepartmentHeader from '../components/DepartmentHeader';
 import DoctorCard from '../components/DoctorCard';
+import welcomeSscc from '../../../common/assets/welcome-sscc.png';
+import welcomePbmh from '../../../common/assets/welcome-pbmh.png';
 import bannerImg from '../../../common/assets/Banner.png';
-import bgImg from '../../../common/assets/bg.png';
+
+const WELCOME_DURATION_MS = 2000; // 2 seconds welcome screen
+const DOCTOR_DURATION_MS = 3000;  // 3 seconds per individual doctor
 
 const formatLocationForUrl = (loc) => {
   if (!loc) return '';
@@ -22,24 +25,15 @@ const injectDisplayStyles = () => {
   const style = document.createElement('style');
   style.id = 'display-screen-styles';
   style.innerHTML = `
-    body, html { overflow: hidden !important; background-color: #f8fafc; }
+    body, html {
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      background-color: #f0f9f6;
+      width: 100vw;
+      height: 100vh;
+    }
     ::-webkit-scrollbar { display: none !important; }
-    @keyframes marquee {
-      0%   { transform: translateX(100vw); }
-      100% { transform: translateX(-100%); }
-    }
-    .animate-marquee { animation: marquee 45s linear infinite; }
-    .animate-marquee:hover { animation-play-state: paused; }
-    @keyframes light-sweep {
-      0%   { transform: translateX(-50vw) skewX(-45deg) scaleX(1); opacity: 0; }
-      25%  { opacity: 0.5; transform: translateX(0vw) skewX(-40deg) scaleX(1.2); }
-      50%  { opacity: 0.2; transform: translateX(50vw) skewX(-45deg) scaleX(0.8); }
-      75%  { opacity: 0.5; transform: translateX(100vw) skewX(-50deg) scaleX(1.1); }
-      100% { transform: translateX(150vw) skewX(-45deg) scaleX(1); opacity: 0; }
-    }
-    .animate-light-1 { animation: light-sweep 8s linear infinite; }
-    .animate-light-2 { animation: light-sweep 12s linear infinite 3s; }
-    .animate-light-3 { animation: light-sweep 16s linear infinite 6s; }
   `;
   if (!document.getElementById('display-screen-styles')) {
     document.head.appendChild(style);
@@ -49,7 +43,6 @@ const injectDisplayStyles = () => {
     if (el) el.remove();
   };
 };
-// ─────────────────────────────────────────────────────────────────────────────
 
 const DisplayScreen = () => {
   const { branch: paramBranch, location: paramLocation } = useParams();
@@ -61,15 +54,43 @@ const DisplayScreen = () => {
   const location = paramLocation || searchParams.get('location');
   const assignedLocs = getAssignedLocations() || [];
 
-  // Resolve branch config (theme + playlist builder) from registry
+  // Resolve branch configuration
   const config = getBranchConfig(branch);
 
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  // All data/SSE logic lives in the hook — DisplayScreen stays clean
+  // Data & Real-time engine (Socket.IO + SSE)
   const { pages, playlist, loading, error } = useDisplayPlaylist(branch, location);
 
-  // Redirect to a valid branch/location if none is specified in the URL
+  // ── Welcome Screen Lifecycle ────────────────────────────────────────────────
+  // Shown for 2s once per display session; routine roster refreshes NEVER restart it
+  const welcomeShownRef = useRef(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  const branchKey = (branch || '').toLowerCase();
+  const welcomeImage = useMemo(() => {
+    if (branchKey === 'sscc') return welcomeSscc;
+    if (branchKey === 'pbmh' || branchKey === 'kims') return welcomePbmh;
+    return config?.welcomeImage || null;
+  }, [branchKey, config]);
+
+  useEffect(() => {
+    if (welcomeShownRef.current || !welcomeImage) {
+      setShowWelcome(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+      welcomeShownRef.current = true;
+    }, WELCOME_DURATION_MS);
+
+    return () => clearTimeout(timer);
+  }, [welcomeImage]);
+
+  const isWelcomeActive = (showWelcome || loading) && !welcomeShownRef.current && Boolean(welcomeImage);
+
+  // Redirect to valid default location if none provided in URL
   useEffect(() => {
     if (!branch || !location) {
       if (user && user.role === 'normal_admin' && assignedLocs.length > 0) {
@@ -83,79 +104,125 @@ const DisplayScreen = () => {
     }
   }, [branch, location, user, assignedLocs, branches, branchLocations, navigate]);
 
-  // Inject global CSS for the display screen
+  // Global styles injection
   useEffect(() => {
     if (branch && location) return injectDisplayStyles();
   }, [branch, location]);
 
-  // Reset page index when playlist changes
-  useEffect(() => {
-    setCurrentPageIndex(0);
+  // ── Unroll / Flatten pages to guarantee EXACTLY ONE doctor per item ─────────
+  const displayPages = useMemo(() => {
+    const list = [];
+    (pages || []).forEach(page => {
+      if (page.isVideo || page.isBanner) {
+        list.push(page);
+      } else if (page.doctors && page.doctors.length > 0) {
+        page.doctors.forEach(doc => {
+          list.push({
+            ...page,
+            doctor: doc,
+            doctors: [doc],
+            duration: DOCTOR_DURATION_MS / 1000,
+          });
+        });
+      } else if (page.doctor) {
+        list.push({
+          ...page,
+          duration: DOCTOR_DURATION_MS / 1000,
+        });
+      } else {
+        list.push(page);
+      }
+    });
+    return list;
   }, [pages]);
 
-  // Auto-advance pages
+  // Bounds check for index on real-time roster update
   useEffect(() => {
-    if (pages.length <= 1) return;
-    const currentPage = pages[currentPageIndex];
-    const goToNext = () => setCurrentPageIndex(prev => (prev + 1) % pages.length);
+    if (displayPages.length === 0) {
+      setCurrentPageIndex(0);
+    } else if (currentPageIndex >= displayPages.length) {
+      setCurrentPageIndex(0);
+    }
+  }, [displayPages, currentPageIndex]);
+
+  // ── Auto-advance rotation timer (3s per doctor) ─────────────────────────────
+  useEffect(() => {
+    if (isWelcomeActive) return; // Do not advance in background during welcome screen
+    if (displayPages.length <= 1) return;
+
+    const currentPage = displayPages[currentPageIndex];
+    const goToNext = () => setCurrentPageIndex(prev => (prev + 1) % displayPages.length);
 
     const durationMs = currentPage?.isVideo
-      ? (Number(currentPage.duration || 10) + 30) * 1000  // generous fallback for videos
-      : (currentPage?.duration || 10) * 1000;
+      ? (Number(currentPage.duration || 10) + 30) * 1000
+      : (currentPage?.doctor ? DOCTOR_DURATION_MS : (currentPage?.duration || 3) * 1000);
 
     const timer = setTimeout(goToNext, durationMs);
     return () => clearTimeout(timer);
-  }, [currentPageIndex, pages]);
+  }, [currentPageIndex, displayPages, isWelcomeActive]);
 
-  // ── Loading / Error states ──────────────────────────────────────────────────
-  if (!branch || !location || loading) {
+  // ── Loading / Error states (fallback when no welcome screen) ────────────────
+  if (!branch || !location || (loading && !isWelcomeActive)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#3478c9]" />
+      <div className="h-screen w-screen flex items-center justify-center bg-[#f0f9f6]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#006837]" />
       </div>
     );
   }
 
   if (error || !playlist) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white text-[#3478c9]">
-        <h2 className="text-2xl font-bold">{error || 'No playlist found for this screen.'}</h2>
-        <p className="mt-2 text-gray-500">Please configure the display in the admin panel.</p>
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#f0f9f6] text-[#006837] px-4 text-center">
+        <h2 className="text-2xl font-bold font-serif">{error || 'No playlist found for this screen.'}</h2>
+        <p className="mt-2 text-slate-600">Please configure the display in the admin panel.</p>
       </div>
     );
   }
 
-  const currentPage = pages[currentPageIndex];
-  const goToNext = () => setCurrentPageIndex(prev => (prev + 1) % pages.length);
+  const currentPage = displayPages[currentPageIndex];
+  const currentDoctor = currentPage?.doctor || currentPage?.doctors?.[0] || null;
+  const goToNext = () => setCurrentPageIndex(prev => (prev + 1) % displayPages.length);
   const isContentPage = !currentPage?.isBanner && !currentPage?.isVideo;
 
   return (
-    <div className="h-screen w-screen flex flex-col font-sans text-slate-900 overflow-hidden relative bg-white">
+    <div className="h-screen w-screen max-h-screen max-w-screen overflow-hidden flex flex-col font-sans text-slate-900 relative bg-[#f0f9f6] select-none">
+      {/* ── Welcome Screen (Shown for 2s once on session init) ──────────────── */}
+      <AnimatePresence mode="wait">
+        {isWelcomeActive && welcomeImage && (
+          <motion.div
+            key="branch-welcome-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: 'easeInOut' }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-white overflow-hidden"
+          >
+            <img
+              src={welcomeImage}
+              alt={`${branch} Welcome Screen`}
+              className="w-full h-full object-contain"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Background image + animated light sweeps (only on content pages) */}
-      {isContentPage && (
-        <>
-          <div
-            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${bgImg})` }}
-          />
-          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none mix-blend-screen">
-            <div className="absolute top-0 -bottom-32 w-[30vw] bg-gradient-to-r from-transparent via-white to-transparent opacity-0 blur-[50px] animate-light-1" />
-            <div className="absolute -top-32 bottom-0 w-[40vw] bg-gradient-to-r from-transparent via-white to-transparent opacity-0 blur-[60px] animate-light-2" />
-            <div className="absolute top-1/4 -bottom-1/4 w-[25vw] bg-gradient-to-r from-transparent via-white to-transparent opacity-0 blur-[40px] animate-light-3" />
-          </div>
-        </>
-      )}
+      {/* ── Medical Pattern Background matching Images 1 & 2 ───────────────── */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#f0f9f6] via-[#e4f3ee] to-[#d6ece6] pointer-events-none">
+        {/* Subtle decorative medical cross watermarks */}
+        <div className="absolute top-20 right-12 text-[#006837]/10 text-6xl sm:text-7xl font-light select-none">+</div>
+        <div className="absolute top-44 left-10 text-[#006837]/10 text-4xl sm:text-5xl font-light select-none">+</div>
+        <div className="absolute bottom-36 right-16 text-[#006837]/10 text-5xl sm:text-6xl font-light select-none">+</div>
+        <div className="absolute bottom-52 left-14 text-[#006837]/10 text-3xl sm:text-4xl font-light select-none">+</div>
+      </div>
 
-      {/* Header — uses config.theme.logo, no branch flags */}
-      {isContentPage && <DisplayHeader theme={config.theme} />}
+      {/* ── Hospital Header matching Images 1 & 2 ──────────────────────────── */}
+      {isContentPage && <DisplayHeader theme={config.theme} branch={branch} />}
 
-      {/* Main content */}
-      <main className={`flex-1 flex flex-col z-10 overflow-hidden min-h-0 ${isContentPage ? 'px-14 py-8' : ''}`}>
-
-        {/* Video page */}
+      {/* ── Main Stage Area (Responsively fits inside remaining height) ─────── */}
+      <main className="flex-1 min-h-0 flex flex-col items-center justify-center z-10 overflow-hidden w-full px-4 sm:px-6 py-1 sm:py-2">
+        {/* Video Step */}
         {currentPage?.isVideo && (
-          <div className="flex-1 flex items-center justify-center overflow-hidden bg-black h-full w-full">
+          <div className="flex-1 flex items-center justify-center overflow-hidden bg-black h-full w-full rounded-2xl">
             <video
               ref={(el) => {
                 if (el) {
@@ -181,7 +248,7 @@ const DisplayScreen = () => {
           </div>
         )}
 
-        {/* Banner / promotional image page */}
+        {/* Promotional Banner Step */}
         {currentPage?.isBanner && (
           <AnimatePresence mode="wait">
             <motion.div
@@ -189,69 +256,59 @@ const DisplayScreen = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.5 }}
               className="flex-1 flex items-center justify-center overflow-hidden min-h-0 w-full h-full"
             >
               <img
                 src={bannerImg}
                 alt="KIMS Banner"
-                className="w-full h-full object-fill"
+                className="w-full h-full object-contain"
               />
             </motion.div>
           </AnimatePresence>
         )}
 
-        {/* Doctor schedule page */}
-        {isContentPage && currentPage?.doctors?.length > 0 && (
-          <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Exactly One Doctor Card at a time matching Images 1 & 2 */}
+        {isContentPage && currentDoctor && (
+          <div className="w-full h-full flex-1 flex items-center justify-center overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentPageIndex}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.5 }}
-                className="flex-1 flex flex-col"
+                key={`doctor-${currentPageIndex}-${currentDoctor.id || currentDoctor.name || 'card'}`}
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                className="w-full h-full flex items-center justify-center"
               >
-                {/* Department pill header */}
-                <DepartmentHeader department={currentPage.department} theme={config.theme} />
-
-                {/* Doctor cards */}
-                <div className="flex-1 overflow-hidden flex flex-col gap-3 w-full mx-auto">
-                  {currentPage.doctors.map((doc, idx) => (
-                    <DoctorCard
-                      key={idx}
-                      doc={doc}
-                      branch={branch}
-                      location={location}
-                      theme={config.theme}
-                    />
-                  ))}
-                </div>
+                <DoctorCard
+                  doc={currentDoctor}
+                  department={currentPage?.department}
+                  branch={branch}
+                  location={location}
+                  theme={config.theme}
+                />
               </motion.div>
             </AnimatePresence>
-
-            <div className="text-center mt-auto pt-6 text-[#627a94] text-sm pb-4 font-medium tracking-wide">
-              © 2026 KIMS ICT. All Rights Reserved.
-            </div>
           </div>
         )}
 
-        {/* Empty state */}
-        {isContentPage && (!currentPage?.doctors || currentPage.doctors.length === 0) && (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 z-10">
-            <div className="w-32 h-32 mb-6 opacity-20">
-              <MonitorPlay className="w-full h-full text-[#1c4587]" />
+        {/* Empty State when no doctors scheduled */}
+        {isContentPage && !currentDoctor && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 z-10">
+            <div className="w-20 h-20 mb-3 opacity-25">
+              <MonitorPlay className="w-full h-full text-[#006837]" />
             </div>
-            <h3 className="text-3xl font-bold text-[#1c4587]">No schedules available</h3>
-            <p className="text-slate-600 text-xl mt-4">
-              There are no doctors scheduled for {currentPage?.stepTitle || 'this step'} today.
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold font-serif text-[#006837]">
+              No Schedules Available
+            </h3>
+            <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-md">
+              There are no doctors scheduled for today at this location.
             </p>
           </div>
         )}
       </main>
 
-      {/* Footer — uses config.theme.footerNumbers, no hardcoded strings */}
+      {/* ── Hospital Footer matching Images 1 & 2 ──────────────────────────── */}
       {isContentPage && <DisplayFooter theme={config.theme} />}
     </div>
   );
