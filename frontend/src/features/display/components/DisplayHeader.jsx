@@ -22,7 +22,7 @@ const DisplayHeader = ({ theme, branch }) => {
   const isSscc = branchKey === 'sscc';
 
   return (
-    <header className="w-full shrink-0 z-20 pt-2 sm:pt-3 pb-0 px-4 sm:px-8 relative flex flex-col items-center bg-white/75 backdrop-blur-md">
+    <header className="w-full shrink-0 z-20 pt-2 sm:pt-3 pb-2 sm:pb-3 px-4 sm:px-8 relative flex flex-col items-center bg-white/75 backdrop-blur-md">
       {/* Top row with LiveClock aligned to top right */}
       <div className="w-full flex items-center justify-between">
         <div className="w-20 hidden sm:block" />
@@ -64,21 +64,6 @@ const DisplayHeader = ({ theme, branch }) => {
         </div>
       </div>
 
-      {/* Curved green arch element matching Images 1 & 2 */}
-      <div className="w-full flex justify-center -mb-2 mt-1 sm:mt-2 pointer-events-none">
-        <svg
-          viewBox="0 0 1000 45"
-          className="w-full max-w-[1280px] h-6 sm:h-8 md:h-10 lg:h-12 overflow-visible"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M 0 42 Q 500 -15 1000 42"
-            fill="none"
-            stroke="#006837"
-            strokeWidth="3.5"
-          />
-        </svg>
-      </div>
     </header>
   );
 };

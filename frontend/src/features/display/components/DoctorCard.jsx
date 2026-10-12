@@ -69,7 +69,7 @@ const DoctorCard = ({ doc, department, branch, location, theme }) => {
   const timingText = doc.timing || '09:00 AM - 05:00 PM';
 
   return (
-    <div className="relative w-full max-w-[380px] sm:max-w-[440px] md:max-w-[500px] lg:max-w-[560px] xl:max-w-[600px] aspect-[10/14] max-h-[64vh] sm:max-h-[66vh] md:max-h-[68vh] mx-auto rounded-[24px] sm:rounded-[30px] md:rounded-[34px] overflow-hidden shadow-[0_20px_50px_rgba(0,104,55,0.18)] border-2 border-white/70 flex flex-col justify-end bg-slate-900">
+    <div className="relative w-full max-w-[340px] sm:max-w-[380px] md:max-w-[420px] lg:max-w-[460px] xl:max-w-[480px] aspect-[9/14] sm:aspect-[9/14.5] md:aspect-[9/15] h-full max-h-[76vh] sm:max-h-[80vh] md:max-h-[82vh] lg:max-h-[85vh] mx-auto rounded-[24px] sm:rounded-[30px] md:rounded-[36px] overflow-hidden shadow-[0_20px_50px_rgba(0,104,55,0.18)] border-2 border-white/70 flex flex-col justify-end bg-slate-900">
       {/* ── 1. Blurred Clinic Corridor Background matching Images 1 & 2 ── */}
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#d4f0ea] via-[#c6eae2] to-[#0ea5e9]">
         {/* Soft perspective lights & bokeh highlights recreating clinical hallway */}
@@ -91,9 +91,9 @@ const DoctorCard = ({ doc, department, branch, location, theme }) => {
           />
         ) : (
           /* Exact Frosted Circular Avatar Placeholder from Images 1 & 2 */
-          <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full bg-white/35 backdrop-blur-md border-2 border-white/60 flex items-center justify-center shadow-lg transition-transform">
+          <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full bg-white/35 backdrop-blur-md border-2 border-white/60 flex items-center justify-center shadow-lg transition-transform">
             <svg
-              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 text-teal-800/40"
+              className="w-16 h-16 sm:w-18 sm:h-18 md:w-22 md:h-22 text-teal-800/40"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -110,14 +110,14 @@ const DoctorCard = ({ doc, department, branch, location, theme }) => {
 
       {/* ── 3. Base Gradient Overlay (Emerald Green to Royal Navy Blue) ── */}
       <div
-        className="relative z-20 w-full pt-12 sm:pt-16 pb-4 sm:pb-5 px-5 sm:px-7 md:px-8 flex flex-col items-center text-center"
+        className="relative z-20 w-full pt-10 sm:pt-12 pb-3.5 sm:pb-4 px-4 sm:px-6 flex flex-col items-center text-center"
         style={{
           background: 'linear-gradient(135deg, rgba(0, 168, 107, 0.94) 0%, rgba(14, 116, 144, 0.94) 45%, rgba(29, 78, 216, 0.96) 100%)',
         }}
       >
         {/* Doctor Name */}
         <h2
-          className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-white tracking-wide drop-shadow-md leading-tight"
+          className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif font-bold text-white tracking-wide drop-shadow-md leading-tight"
           style={{ fontFamily: '"Times New Roman", Times, Georgia, serif' }}
         >
           {formattedName}
@@ -125,28 +125,28 @@ const DoctorCard = ({ doc, department, branch, location, theme }) => {
 
         {/* Designation & Department */}
         {designationAndDept && (
-          <p className="text-xs sm:text-sm md:text-base lg:text-lg text-white/95 font-medium mt-0.5 sm:mt-1 tracking-wide drop-shadow-sm line-clamp-2">
+          <p className="text-xs sm:text-sm md:text-base text-white/95 font-medium mt-0.5 sm:mt-1 tracking-wide drop-shadow-sm line-clamp-2">
             {designationAndDept}
           </p>
         )}
 
         {/* Thin Horizontal Divider */}
-        <div className="w-full h-[1px] bg-white/40 my-2 sm:my-3" />
+        <div className="w-full h-[1px] bg-white/40 my-2 sm:my-2.5" />
 
         {/* Bottom Row: OPD Days Badges (Left) & Consultation Timings (Right) */}
-        <div className="w-full flex items-center justify-between gap-2">
+        <div className="w-full flex items-center justify-between gap-1.5 sm:gap-2">
           {/* OPD Days Section */}
           <div className="flex flex-col items-start">
-            <span className="text-[10px] sm:text-xs uppercase tracking-wider text-white/90 font-semibold mb-0.5 sm:mb-1">
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-white/90 font-semibold mb-0.5">
               OPD Days
             </span>
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+            <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
               {DAYS.map((day) => {
                 const isActive = activeDaysSet.has(day.toLowerCase());
                 return (
                   <span
                     key={day}
-                    className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded shadow-sm transition-all ${
+                    className={`text-[9px] sm:text-[10px] md:text-xs px-1 sm:px-1.5 py-0.5 rounded shadow-sm transition-all ${
                       isActive
                         ? 'bg-white text-slate-900 font-bold'
                         : 'bg-white/85 text-teal-800 font-semibold'
@@ -160,8 +160,8 @@ const DoctorCard = ({ doc, department, branch, location, theme }) => {
           </div>
 
           {/* Consultation Timings Section with Clock Icon */}
-          <div className="flex items-center gap-1 sm:gap-1.5 text-white shrink-0 font-bold text-xs sm:text-sm md:text-base drop-shadow-sm self-end pb-0.5">
-            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white/90 shrink-0" />
+          <div className="flex items-center gap-1 text-white shrink-0 font-bold text-[11px] sm:text-xs md:text-sm drop-shadow-sm self-end pb-0.5">
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/90 shrink-0" />
             <span className="whitespace-nowrap">{timingText}</span>
           </div>
         </div>
