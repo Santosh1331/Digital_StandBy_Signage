@@ -21,9 +21,9 @@ export default async function getCroppedImg(imageSrc, pixelCrop) {
     return null
   }
 
-  // Max dimensions for the exported photo
-  const MAX_WIDTH = 800;
-  const MAX_HEIGHT = 800;
+  // Max dimensions for the exported photo (supports high resolution on portrait signage)
+  const MAX_WIDTH = 1200;
+  const MAX_HEIGHT = 1600;
 
   let finalWidth = pixelCrop.width;
   let finalHeight = pixelCrop.height;

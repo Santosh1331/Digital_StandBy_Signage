@@ -602,11 +602,11 @@ const Doctor = () => {
                     <tr key={doc.id} className="hover:bg-slate-800/20 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full border border-slate-800 overflow-hidden bg-slate-900 flex items-center justify-center shrink-0">
+                          <div className="w-11 h-14 rounded-lg border border-slate-700/80 overflow-hidden bg-slate-900 flex items-center justify-center shrink-0 shadow-sm">
                             {doc.photo_url ? (
-                              <img src={getFullPhotoUrl(doc.photo_url)} alt={doc.name} className="w-full h-full object-cover" loading="lazy" />
+                              <img src={getFullPhotoUrl(doc.photo_url)} alt={doc.name} className="w-full h-full object-cover object-top" loading="lazy" />
                             ) : (
-                              <Image className="w-4 h-4 text-slate-600" />
+                              <Image className="w-5 h-5 text-slate-600" />
                             )}
                           </div>
                           <div>
@@ -709,30 +709,42 @@ const Doctor = () => {
       >
         {cropModalOpen ? (
           <div className="space-y-4">
-            <div className="relative w-full h-80 bg-slate-900 rounded-xl overflow-hidden border border-slate-700">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-700/60">
+              <div>
+                <h4 className="text-sm font-semibold text-white">Crop Doctor Photo (Portrait 3:4)</h4>
+                <p className="text-xs text-slate-400">Position the doctor from head to waist to match the vertical kiosk stand.</p>
+              </div>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                Half-Body Portrait
+              </span>
+            </div>
+            <div className="relative w-full h-96 bg-slate-950 rounded-xl overflow-hidden border border-slate-700 shadow-inner">
               <Cropper
                 image={tempImageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={1}
-                cropShape="round"
-                showGrid={false}
+                aspect={3 / 4}
+                cropShape="rect"
+                showGrid={true}
                 onCropChange={setCrop}
                 onCropComplete={onCropComplete}
                 onZoomChange={setZoom}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-slate-300">Zoom</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-300">Zoom & Position</label>
+                <span className="text-xs font-mono text-slate-400">{Number(zoom).toFixed(1)}x</span>
+              </div>
               <input
                 type="range"
                 value={zoom}
                 min={1}
                 max={3}
-                step={0.1}
+                step={0.05}
                 aria-labelledby="Zoom"
-                onChange={(e) => setZoom(e.target.value)}
-                className="w-full accent-emerald-500"
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full accent-emerald-500 cursor-pointer"
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">
@@ -756,17 +768,22 @@ const Doctor = () => {
           <form onSubmit={handleAddDoctor} className="space-y-5">
             <div className="flex flex-col items-center justify-center p-6 border border-dashed border-slate-700/60 rounded-2xl bg-slate-900/30 group transition-all hover:bg-slate-900/50 hover:border-emerald-500/50">
               {photoPreview ? (
-                <div className="relative w-24 h-24 rounded-full border border-slate-700/60 overflow-hidden shadow-inner group-hover:border-emerald-500/50 transition-colors">
-                  <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(''); }} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-400 transition-opacity cursor-pointer">
-                    <X className="w-5 h-5" />
+                <div className="relative w-28 h-36 rounded-xl border-2 border-emerald-500/40 overflow-hidden shadow-lg group-hover:border-emerald-500 transition-colors bg-slate-950">
+                  <img src={photoPreview} alt="Preview" className="w-full h-full object-cover object-top" />
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoFile(null); setPhotoPreview(''); }}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
+                    title="Remove Photo"
+                  >
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center cursor-pointer space-y-2">
                   <div className="text-center">
-                    <p className="text-sm font-semibold text-slate-300 group-hover:text-emerald-400 transition-colors">Upload Photo</p>
-                    <span className="text-slate-400 block mt-1">JPG, PNG or WEBP (Max 12MB)</span>
+                    <p className="text-sm font-semibold text-slate-300 group-hover:text-emerald-400 transition-colors">Upload Doctor Photo</p>
+                    <span className="text-slate-400 text-xs block mt-1">Portrait Half-Body (Head to Waist) • JPG, PNG or WEBP (Max 12MB)</span>
                   </div>
                   <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
                 </label>

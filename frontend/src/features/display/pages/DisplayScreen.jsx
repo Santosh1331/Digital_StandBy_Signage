@@ -10,7 +10,8 @@ import DisplayFooter from '../components/DisplayFooter';
 import DoctorCard from '../components/DoctorCard';
 import welcomeSscc from '../../../common/assets/welcome-sscc.png';
 import welcomePbmh from '../../../common/assets/welcome-pbmh.png';
-import bannerImg from '../../../common/assets/Banner.png';
+import bannerImg from '../../../common/assets/Banner.jpeg';
+import kioskStandBg from '../../../common/assets/kiosk-stand-bg.jpg';
 
 const WELCOME_DURATION_MS = 2000; // 2 seconds welcome screen
 const DOCTOR_DURATION_MS = 3000;  // 3 seconds per individual doctor
@@ -185,7 +186,7 @@ const DisplayScreen = () => {
   const isContentPage = !currentPage?.isBanner && !currentPage?.isVideo;
 
   return (
-    <div className="h-screen w-screen max-h-screen max-w-screen overflow-hidden flex flex-col font-sans text-slate-900 relative bg-[#f0f9f6] select-none">
+    <div className={`h-screen w-screen max-h-screen max-w-screen overflow-hidden flex flex-col font-sans text-slate-900 relative ${currentPage?.isVideo ? 'bg-black' : currentPage?.isBanner ? 'bg-white' : 'bg-[#f0f9f6]'} select-none`}>
       {/* ── Welcome Screen (Shown for 2s once on session init) ──────────────── */}
       <AnimatePresence mode="wait">
         {isWelcomeActive && welcomeImage && (
@@ -206,20 +207,22 @@ const DisplayScreen = () => {
         )}
       </AnimatePresence>
 
-      {/* ── Medical Pattern Background matching Images 1 & 2 ───────────────── */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#f0f9f6] via-[#e4f3ee] to-[#d6ece6] pointer-events-none">
-        {/* Subtle decorative medical cross watermarks */}
-        <div className="absolute top-20 right-12 text-[#006837]/10 text-6xl sm:text-7xl font-light select-none">+</div>
-        <div className="absolute top-44 left-10 text-[#006837]/10 text-4xl sm:text-5xl font-light select-none">+</div>
-        <div className="absolute bottom-36 right-16 text-[#006837]/10 text-5xl sm:text-6xl font-light select-none">+</div>
-        <div className="absolute bottom-52 left-14 text-[#006837]/10 text-3xl sm:text-4xl font-light select-none">+</div>
-      </div>
+      {/* ── Authentic Medical Pattern & Concentric Framing Arch Backdrop (Doctor Roster Pages Only) ── */}
+      {isContentPage && (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+          <img
+            src={kioskStandBg}
+            alt="Hospital Display Backdrop"
+            className="w-full h-full object-cover object-top"
+          />
+        </div>
+      )}
 
       {/* ── Hospital Header matching Images 1 & 2 ──────────────────────────── */}
       {isContentPage && <DisplayHeader theme={config.theme} branch={branch} />}
 
       {/* ── Main Stage Area (Responsively fits inside remaining height) ─────── */}
-      <main className="flex-1 min-h-0 flex flex-col items-center justify-center z-10 overflow-hidden w-full px-4 sm:px-6 py-1 sm:py-2">
+      <main className={`flex-1 min-h-0 flex flex-col items-center justify-center z-10 overflow-hidden w-full ${isContentPage ? 'px-3 sm:px-6 py-0.5 sm:py-1' : 'p-0'}`}>
         {/* Video Step */}
         {currentPage?.isVideo && (
           <div className="flex-1 flex items-center justify-center overflow-hidden bg-black h-full w-full rounded-2xl">
@@ -257,7 +260,7 @@ const DisplayScreen = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex-1 flex items-center justify-center overflow-hidden min-h-0 w-full h-full"
+              className="flex-1 flex items-center justify-center overflow-hidden min-h-0 w-full h-full bg-white"
             >
               <img
                 src={bannerImg}

@@ -1,18 +1,16 @@
 import React from 'react';
 import LiveClock from './LiveClock';
+import dualLogo from '../../../common/assets/kiit-kims-dual-logo.png';
 import kimsEmblem from '../../../common/assets/kims-emblem.png';
 
 /**
  * DisplayHeader
  *
- * Recreates the exact Hospital Header from Image 1 (SSCC) and Image 2 (PBMH):
- * - KIMS Caduceus Seal emblem at top center.
- * - Sub-heading: "Kalinga Institute of Medical Sciences (KIMS)".
- * - Branch Heading:
- *     - SSCC: "KIMS SUPER SPECIALITY & CANCER CENTER"
+ * Exact recreation of Hospital Header from physical Totem Stand Kiosk & Source Template:
+ * - Dual Emblem (KIIT Logo | KIMS Crest) centered at the top.
+ * - Bold Emerald Serif Heading:
+ *     - SSCC: "KIMS SUPER SPECIALITY & CANCER CENTRE"
  *     - PBMH: "PRADYUMNA BAL MEMORIAL HOSPITAL"
- * - Tagline: "“Healthcare with Healing Touch”".
- * - Curved green arch beneath the branding framing the doctor card stage.
  * - Live clock in top-right corner.
  *
  * @param {{ theme: object, branch: string }} props
@@ -22,48 +20,44 @@ const DisplayHeader = ({ theme, branch }) => {
   const isSscc = branchKey === 'sscc';
 
   return (
-    <header className="w-full shrink-0 z-20 pt-2 sm:pt-3 pb-2 sm:pb-3 px-4 sm:px-8 relative flex flex-col items-center bg-white/75 backdrop-blur-md">
+    <header className="w-full shrink-0 z-20 py-2 sm:py-3 px-3 sm:px-6 md:px-8 relative flex flex-col items-center bg-white/85 backdrop-blur-sm border-b border-emerald-900/10 shadow-xs">
       {/* Top row with LiveClock aligned to top right */}
-      <div className="w-full flex items-center justify-between">
-        <div className="w-20 hidden sm:block" />
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-4">
+        {/* Left balance spacer matching clock width */}
+        <div className="w-28 sm:w-40 md:w-52 lg:w-60 hidden sm:block shrink-0" />
 
-        {/* Center: Hospital Logo & Heading matching Images 1 & 2 */}
+        {/* Center: Hospital Dual-Emblem Logo & Heading matching Stand Kiosk */}
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-          {/* Emblem Seal */}
+          {/* Dual Emblem Seal (KIIT | KIMS) */}
           <img
-            src={kimsEmblem}
-            alt="KIMS Emblem"
-            className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto object-contain drop-shadow-sm mb-1"
+            src={isSscc ? dualLogo : kimsEmblem}
+            alt="KIIT | KIMS"
+            className="h-9 sm:h-11 md:h-13 lg:h-15 w-auto object-contain drop-shadow-sm mb-1 sm:mb-1.5"
           />
 
-          {/* Subheading */}
-          <span className="text-[#006837] text-[11px] sm:text-xs md:text-sm lg:text-base font-semibold tracking-wide">
-            Kalinga Institute of Medical Sciences (KIMS)
-          </span>
-
-          {/* Main Hospital Name */}
+          {/* Main Hospital Name in Emerald Serif */}
           <h1
-            className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-serif font-bold text-[#006837] tracking-wide sm:tracking-wider uppercase leading-tight mt-0.5"
+            className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-serif font-extrabold text-[#006837] tracking-wider uppercase leading-tight"
             style={{ fontFamily: '"Times New Roman", Times, Georgia, serif' }}
           >
-            {isSscc ? 'KIMS SUPER SPECIALITY & CANCER CENTER' : 'PRADYUMNA BAL MEMORIAL HOSPITAL'}
+            {isSscc ? (
+              <span className="flex flex-col items-center">
+                <span className="leading-tight">KIMS SUPER SPECIALITY</span>
+                <span className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold tracking-widest mt-0.5 leading-tight">
+                  & CANCER CENTRE
+                </span>
+              </span>
+            ) : (
+              <span className="leading-tight">PRADYUMNA BAL MEMORIAL HOSPITAL</span>
+            )}
           </h1>
-
-          {/* Tagline */}
-          <p
-            className="text-[#006837] text-[11px] sm:text-xs md:text-sm lg:text-base italic font-serif mt-0.5 tracking-wide"
-            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-          >
-            “Healthcare with Healing Touch”
-          </p>
         </div>
 
-        {/* Subtle Live Clock */}
-        <div className="w-20 flex justify-end shrink-0">
+        {/* Right: Highlighted Live Clock */}
+        <div className="w-28 sm:w-40 md:w-52 lg:w-60 flex justify-end shrink-0">
           <LiveClock />
         </div>
       </div>
-
     </header>
   );
 };

@@ -18,17 +18,11 @@ const LiveClock = () => {
   });
 
   return (
-    <div className="w-1/5 text-right flex flex-col items-end text-white justify-center">
-      <p
-        className="text-3xl font-medium whitespace-nowrap drop-shadow-md"
-        style={{ fontFamily: '"Times New Roman", Times, serif' }}
-      >
+    <div className="flex flex-col items-end justify-center bg-white/95 border border-[#006837]/30 shadow-sm rounded-xl px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 text-right">
+      <p className="text-xs sm:text-sm md:text-base font-bold text-[#006837] uppercase tracking-wide whitespace-nowrap">
         {dateString}
       </p>
-      <p
-        className="text-7xl font-bold mt-1 tracking-tight drop-shadow-md"
-        style={{ fontFamily: '"Times New Roman", Times, serif' }}
-      >
+      <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-[#004d25] font-mono tracking-tight leading-none mt-1">
         {timeString}
       </p>
     </div>
